@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LTV per Install Calculator</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    label { display: block; margin-top: 20px; font-weight: bold; }
+    input { width: 100%; padding: 8px; font-size: 1em; }
+    .result { margin-top: 30px; font-size: 1.2em; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 40px; }
+    td, th { border: 1px solid #ccc; padding: 5px; text-align: center; }
+    .highlight { background-color: #c6f7d0; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>LTV per Install Calculator</h1>
+
+  <label for="trialStartRate">Trial Start Rate (%)</label>
+  <input id="trialStartRate" type="number" step="0.1" value="20" />
+
+  <label for="trialConvRate">Trial Conversion Rate (%)</label>
+  <input id="trialConvRate" type="number" step="0.1" value="20" />
+
+  <label for="ltvPerPayer">LTV of Paying User ($)</label>
+  <input id="ltvPerPayer" type="number" step="0.01" value="60" />
+
+  <label for="cpi">CPI ($)</label>
+  <input id="cpi" type="number" step="0.01" value="2" />
+
+  <div class="result" id="output"></div>
+
+  <table id="matrixTable">
+    <thead>
+      <tr><th>Trial Start %</th><th>Trial Conversion %</th><th>LTV per Install ($)</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const trialStartRateInput = document.getElementById("trialStartRate");
+    const trialConvRateInput = document.getElementById("trialConvRate");
+    const ltvPerPayerInput = document.getElementById("ltvPerPayer");
+    const cpiInput = document.getElementById("cpi");
+    const output = document.getElementById("output");
+    const matrixBody = document.querySelector("#matrixTable tbody");
+
+    function calculate() {
+      const trialStart = parseFloat(trialStartRateInput.value) / 100;
+      const trialConv = parseFloat(trialConvRateInput.value) / 100;
+      const ltv = parseFloat(ltvPerPayerInput.value);
+      const cpi = parseFloat(cpiInput.value);
+
+      const ltvPerInstall = trialStart * trialConv * ltv;
+      const profitable = ltvPerInstall >= cpi;
+
+      output.innerHTML = `
+        LTV per Install: <strong>$${ltvPerInstall.toFixed(2)}</strong><br/>
+        ${profitable ? "✅ Profitable" : "❌ Not Profitable"}
+      `;
+
+      // build matrix
+      matrixBody.innerHTML = "";
+      for (let ts = 10; ts <= 50; ts += 5) {
+        for (let tc = 10; tc <= 50; tc += 5) {
+          const val = (ts/100 * tc/100 * ltv).toFixed(2);
+          const highlight = ts === parseFloat(trialStartRateInput.value) && tc === parseFloat(trialConvRateInput.value);
+          matrixBody.innerHTML += `<tr>
+            <td>${ts}%</td>
+            <td>${tc}%</td>
+            <td class="${highlight ? 'highlight' : ''}">${val}</td>
+          </tr>`;
+        }
+      }
+    }
+
+    [trialStartRateInput, trialConvRateInput, ltvPerPayerInput, cpiInput].forEach(input => {
+      input.addEventListener("input", calculate);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
